@@ -1,0 +1,142 @@
+{
+  "name": "Application",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "description": "Name of the company"
+    },
+    "position_title": {
+      "type": "string",
+      "description": "Job title/position applied for"
+    },
+    "job_description": {
+      "type": "string",
+      "description": "Full job description or key requirements"
+    },
+    "application_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when application was submitted"
+    },
+    "application_method": {
+      "type": "string",
+      "enum": [
+        "linkedin_easy_apply",
+        "company_website",
+        "email",
+        "recruiter",
+        "referral",
+        "job_board"
+      ],
+      "description": "How the application was submitted"
+    },
+    "job_source": {
+      "type": "string",
+      "enum": [
+        "linkedin",
+        "whatsapp_group",
+        "friend_referral",
+        "company_direct",
+        "job_board",
+        "recruiter"
+      ],
+      "description": "Where the job was found"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "applied",
+        "no_response",
+        "auto_rejection",
+        "rejected_after_screening",
+        "rejected_after_interview",
+        "offer_received",
+        "offer_accepted",
+        "offer_declined"
+      ],
+      "default": "applied",
+      "description": "Current status of the application"
+    },
+    "cv_version_used": {
+      "type": "string",
+      "description": "Reference to CV version used"
+    },
+    "cover_letter": {
+      "type": "string",
+      "description": "Cover letter content or reference"
+    },
+    "additional_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs or references to additional documents"
+    },
+    "interview_stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_name": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "interviewer": {
+            "type": "string"
+          },
+          "feedback": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "rejected",
+              "pending"
+            ]
+          }
+        }
+      }
+    },
+    "salary_range": {
+      "type": "string",
+      "description": "Advertised salary range"
+    },
+    "location": {
+      "type": "string",
+      "description": "Job location"
+    },
+    "work_type": {
+      "type": "string",
+      "enum": [
+        "remote",
+        "hybrid",
+        "on_site"
+      ],
+      "description": "Work arrangement"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the application"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Reason for rejection if provided"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Next follow-up date"
+    }
+  },
+  "required": [
+    "company_name",
+    "position_title",
+    "application_date",
+    "status"
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "name": "Offer",
+  "type": "object",
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "description": "Reference to the application that resulted in this offer"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Company making the offer"
+    },
+    "position_title": {
+      "type": "string",
+      "description": "Position offered"
+    },
+    "base_salary": {
+      "type": "number",
+      "description": "Base annual salary"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Currency of the salary"
+    },
+    "bonus_structure": {
+      "type": "string",
+      "description": "Details about bonus/incentive structure"
+    },
+    "benefits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "benefit_type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "vacation_days": {
+      "type": "number",
+      "description": "Annual vacation days"
+    },
+    "work_type": {
+      "type": "string",
+      "enum": [
+        "remote",
+        "hybrid",
+        "on_site"
+      ]
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Proposed start date"
+    },
+    "offer_deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Deadline to respond to offer"
+    },
+    "equity_details": {
+      "type": "string",
+      "description": "Stock options or equity details"
+    },
+    "professional_development": {
+      "type": "string",
+      "description": "Learning and development opportunities"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "negotiating"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the offer"
+    },
+    "overall_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Personal rating of the offer (1-10)"
+    }
+  },
+  "required": [
+    "application_id",
+    "company_name",
+    "position_title",
+    "base_salary"
+  ]
+}

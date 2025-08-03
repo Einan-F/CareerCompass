@@ -1,0 +1,51 @@
+{
+  "name": "CV",
+  "type": "object",
+  "properties": {
+    "version_name": {
+      "type": "string",
+      "description": "Name/identifier for this CV version"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the CV file"
+    },
+    "target_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target job roles this CV is optimized for"
+    },
+    "key_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key skills highlighted in this version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of changes or focus of this version"
+    },
+    "applications_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of applications using this CV"
+    },
+    "interview_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Interview invitation rate (percentage)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this CV version is currently active"
+    }
+  },
+  "required": [
+    "version_name",
+    "file_url"
+  ]
+}
