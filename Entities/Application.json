@@ -62,9 +62,13 @@
       "type": "string",
       "description": "Reference to CV version used"
     },
+    "cover_letter_file_url": {
+      "type": "string",
+      "description": "URL to the cover letter file"
+    },
     "cover_letter": {
       "type": "string",
-      "description": "Cover letter content or reference"
+      "description": "Cover letter content or notes"
     },
     "additional_documents": {
       "type": "array",
