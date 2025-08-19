@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { X, Save } from "lucide-react";
+import { X, Save, Upload, Loader2, Check } from "lucide-react";
+import { UploadFile } from "@/integrations/Core"; // Assuming this path is correct
 
 export default function ApplicationForm({ application, cvs, onSave, onCancel }) {
   const [formData, setFormData] = useState(application || {
@@ -18,20 +20,69 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
     job_source: "",
     status: "applied",
     cv_version_used: "",
-    cover_letter: "",
+    cover_letter_file_url: "", // New field for uploaded cover letter URL
+    cover_letter: "", // Now for notes
     salary_range: "",
     location: "",
     work_type: "",
     notes: ""
   });
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.company_name) newErrors.company_name = "Company name is required.";
+    if (!formData.position_title) newErrors.position_title = "Position title is required.";
+    if (!formData.application_date) {
+      newErrors.application_date = "Application date is required.";
+    } else if (new Date(formData.application_date) > new Date()) {
+      newErrors.application_date = "Application date cannot be in the future.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    if (validateForm()) {
+      onSave(formData);
+    }
   };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for the field once it's changed
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCoverLetterUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadSuccess(false);
+
+    try {
+      const { file_url } = await UploadFile({ file });
+      handleChange('cover_letter_file_url', file_url);
+      setUploadSuccess(true);
+      // Optionally clear the file input value to allow re-uploading the same file
+      e.target.value = ''; 
+    } catch (error) {
+      console.error("Cover letter upload failed:", error);
+      setUploadSuccess(false); // Ensure success is false on error
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -64,6 +115,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
                   placeholder="e.g. Google, Microsoft"
                   required
                 />
+                {errors.company_name && <p className="text-sm text-red-500">{errors.company_name}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="position_title">Position Title *</Label>
@@ -74,6 +126,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
                   placeholder="e.g. Senior Data Scientist"
                   required
                 />
+                {errors.position_title && <p className="text-sm text-red-500">{errors.position_title}</p>}
               </div>
             </div>
 
@@ -88,6 +141,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
                   onChange={(e) => handleChange('application_date', e.target.value)}
                   required
                 />
+                {errors.application_date && <p className="text-sm text-red-500">{errors.application_date}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="application_method">Application Method</Label>
@@ -210,6 +264,33 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
               </div>
             </div>
 
+            <div className="space-y-2">
+                <Label htmlFor="cover_letter_upload">Attach Cover Letter (PDF/DOCX)</Label>
+                <div className="flex items-center gap-2">
+                  <Button asChild variant="outline">
+                    <label htmlFor="cover_letter_input" className="cursor-pointer">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Choose File
+                    </label>
+                  </Button>
+                  <Input
+                    id="cover_letter_input"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleCoverLetterUpload}
+                    className="hidden"
+                  />
+                  {isUploading && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+                  {uploadSuccess && !isUploading && <Check className="w-5 h-5 text-green-500" />}
+                  {formData.cover_letter_file_url && !isUploading && (
+                    <a href={formData.cover_letter_file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
+                      {/* Displaying only the filename for brevity, assuming URL provides a recognizable name or a simple generic "Uploaded File" */}
+                      {formData.cover_letter_file_url.split('/').pop() || "Uploaded File"}
+                    </a>
+                  )}
+                </div>
+            </div>
+
             {/* Long Text Fields */}
             <div className="space-y-2">
               <Label htmlFor="job_description">Job Description</Label>
@@ -223,7 +304,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cover_letter">Cover Letter</Label>
+              <Label htmlFor="cover_letter">Cover Letter Notes</Label>
               <Textarea
                 id="cover_letter"
                 value={formData.cover_letter}
@@ -249,7 +330,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
               >

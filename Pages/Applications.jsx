@@ -1,18 +1,21 @@
+
 import React, { useState, useEffect } from "react";
 import { Application, CV } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Filter,
   Building2,
   Calendar,
   MapPin,
   ExternalLink,
   Edit,
-  Eye
+  Eye,
+  LayoutGrid, // Added for grid view icon
+  List // Added for list/table view icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,6 +23,7 @@ import ApplicationForm from "../components/applications/ApplicationForm";
 import ApplicationCard from "../components/applications/ApplicationCard";
 import ApplicationFilters from "../components/applications/ApplicationFilters";
 import ApplicationDetails from "../components/applications/ApplicationDetails";
+import ApplicationsTable from "../components/applications/ApplicationsTable"; // New component import
 
 export default function Applications() {
   const [applications, setApplications] = useState([]);
@@ -29,6 +33,7 @@ export default function Applications() {
   const [editingApplication, setEditingApplication] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState('card'); // New state for view mode
   const [filters, setFilters] = useState({
     status: "all",
     method: "all",
@@ -38,7 +43,7 @@ export default function Applications() {
   useEffect(() => {
     loadApplications();
     loadCVs();
-    
+
     // Check URL parameters for new application
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('action') === 'new') {
@@ -64,7 +69,7 @@ export default function Applications() {
     } else {
       await Application.create(applicationData);
     }
-    
+
     setShowForm(false);
     setEditingApplication(null);
     loadApplications();
@@ -76,19 +81,25 @@ export default function Applications() {
     setSelectedApplication(null);
   };
 
+  // New function to handle application deletion
+  const handleDeleteApplication = async (appId) => {
+    await Application.delete(appId);
+    loadApplications();
+  };
+
   const filteredApplications = applications.filter(app => {
     const matchesSearch = app.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.position_title.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filters.status === "all" || app.status === filters.status;
     const matchesMethod = filters.method === "all" || app.application_method === filters.method;
-    
+
     let matchesDate = true;
     if (filters.dateRange !== "all") {
       const appDate = new Date(app.application_date);
       const now = new Date();
       const daysAgo = Math.floor((now - appDate) / (1000 * 60 * 60 * 24));
-      
+
       switch (filters.dateRange) {
         case "week":
           matchesDate = daysAgo <= 7;
@@ -101,14 +112,15 @@ export default function Applications() {
           break;
       }
     }
-    
+
     return matchesSearch && matchesStatus && matchesMethod && matchesDate;
   });
 
   if (selectedApplication) {
     return (
-      <ApplicationDetails 
+      <ApplicationDetails
         application={selectedApplication}
+        cvs={cvs} // Pass cvs to ApplicationDetails
         onBack={() => setSelectedApplication(null)}
         onEdit={handleEditApplication}
       />
@@ -119,7 +131,7 @@ export default function Applications() {
     <div className="min-h-screen gradient-bg p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
@@ -128,7 +140,7 @@ export default function Applications() {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Job Applications</h1>
             <p className="text-gray-600 text-lg">Track and manage all your job applications</p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowForm(true)}
             className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
           >
@@ -170,35 +182,56 @@ export default function Applications() {
               />
             </div>
             <ApplicationFilters filters={filters} onFilterChange={setFilters} />
+            {/* View Mode Toggle Buttons */}
+            <div className="flex items-center gap-2">
+                <Button variant={viewMode === 'card' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('card')}>
+                  <LayoutGrid className="w-5 h-5" />
+                </Button>
+                <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('table')}>
+                  <List className="w-5 h-5" />
+                </Button>
+            </div>
           </div>
         </motion.div>
 
-        {/* Applications Grid */}
+        {/* Applications Grid / Table */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid gap-6"
         >
           <AnimatePresence>
             {isLoading ? (
-              Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-white/80 rounded-2xl p-6 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded mb-4 w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              ))
+              <div className="grid gap-6"> {/* Wrap loading skeletons in a grid for card-like display */}
+                {Array(6).fill(0).map((_, i) => (
+                  <div key={i} className="bg-white/80 rounded-2xl p-6 animate-pulse">
+                    <div className="h-6 bg-gray-200 rounded mb-4 w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  </div>
+                ))}
+              </div>
             ) : filteredApplications.length > 0 ? (
-              filteredApplications.map((application, index) => (
-                <ApplicationCard
-                  key={application.id}
-                  application={application}
-                  index={index}
-                  onClick={() => setSelectedApplication(application)}
-                  onEdit={() => handleEditApplication(application)}
-                />
-              ))
+                viewMode === 'card' ? (
+                   <div className="grid gap-6"> {/* Container for ApplicationCards */}
+                    {filteredApplications.map((application, index) => (
+                        <ApplicationCard
+                        key={application.id}
+                        application={application}
+                        index={index}
+                        onClick={() => setSelectedApplication(application)}
+                        onEdit={() => handleEditApplication(application)}
+                        />
+                    ))}
+                   </div>
+                ) : (
+                    <ApplicationsTable
+                        data={filteredApplications}
+                        onViewDetails={setSelectedApplication}
+                        onEdit={handleEditApplication}
+                        onDelete={handleDeleteApplication} // Pass the delete handler
+                    />
+                )
             ) : (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -214,7 +247,7 @@ export default function Applications() {
                   }
                 </p>
                 {!searchTerm && filters.status === "all" && filters.method === "all" && filters.dateRange === "all" && (
-                  <Button 
+                  <Button
                     onClick={() => setShowForm(true)}
                     className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                   >

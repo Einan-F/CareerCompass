@@ -1,10 +1,13 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Calendar, MapPin, FileText, Building2, DollarSign, Clock, Users, ExternalLink } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, MapPin, FileText, Building2, DollarSign, Clock, Users, ExternalLink, Target } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 const statusColors = {
   applied: "bg-blue-100 text-blue-800 border-blue-200",
@@ -23,7 +26,11 @@ const workTypeIcons = {
   on_site: "🏗️"
 };
 
-export default function ApplicationDetails({ application, onBack, onEdit }) {
+export default function ApplicationDetails({ application, cvs, onBack, onEdit }) {
+  const cvFileUrl = cvs.find(cv => cv.version_name === application.cv_version_used)?.file_url;
+  
+  const canManageOffer = ['offer_received', 'offer_accepted', 'offer_declined'].includes(application.status);
+
   return (
     <div className="min-h-screen gradient-bg p-6">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -85,17 +92,68 @@ export default function ApplicationDetails({ application, onBack, onEdit }) {
                     )}
                   </div>
                 </div>
-                
-                <Button 
-                  onClick={() => onEdit(application)} 
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Application
-                </Button>
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+            <Card className="premium-card border-0">
+            <CardContent className="p-4 flex flex-wrap items-center justify-center gap-4">
+                <Button 
+                    variant="outline" 
+                    className="flex-1 justify-center hover:bg-blue-50"
+                    onClick={() => onEdit(application)}
+                >
+                    <Edit className="w-4 h-4 mr-3" />
+                    Edit Application
+                </Button>
+                
+                {cvFileUrl && (
+                    <Button 
+                    variant="outline" 
+                    className="flex-1 justify-center hover:bg-green-50"
+                    asChild
+                    >
+                    <a href={cvFileUrl} target="_blank" rel="noopener noreferrer">
+                        <FileText className="w-4 h-4 mr-3" />
+                        View CV Used
+                    </a>
+                    </Button>
+                )}
+                
+                {application.cover_letter_file_url && (
+                     <Button 
+                    variant="outline" 
+                    className="flex-1 justify-center hover:bg-purple-50"
+                    asChild
+                    >
+                    <a href={application.cover_letter_file_url} target="_blank" rel="noopener noreferrer">
+                        <FileText className="w-4 h-4 mr-3" />
+                        View Cover Letter
+                    </a>
+                    </Button>
+                )}
+                
+                {canManageOffer && (
+                     <Button 
+                        variant="outline" 
+                        className="flex-1 justify-center hover:bg-amber-50"
+                        asChild
+                    >
+                        <Link to={createPageUrl("Offers")}>
+                            <Target className="w-4 h-4 mr-3" />
+                            Manage Offer
+                        </Link>
+                    </Button>
+                )}
+            </CardContent>
+            </Card>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -124,7 +182,7 @@ export default function ApplicationDetails({ application, onBack, onEdit }) {
               </motion.div>
             )}
 
-            {/* Cover Letter */}
+            {/* Cover Letter Notes */}
             {application.cover_letter && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -135,7 +193,7 @@ export default function ApplicationDetails({ application, onBack, onEdit }) {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="w-5 h-5 text-green-500" />
-                      Cover Letter
+                      Cover Letter Notes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -312,7 +370,7 @@ export default function ApplicationDetails({ application, onBack, onEdit }) {
                       { stage: 'Applied', completed: true },
                       { stage: 'Screening', completed: application.status !== 'applied' && application.status !== 'no_response' },
                       { stage: 'Interview', completed: application.interview_stages && application.interview_stages.length > 0 },
-                      { stage: 'Offer', completed: application.status === 'offer_received' || application.status === 'offer_accepted' }
+                      { stage: 'Offer', completed: canManageOffer }
                     ].map((item, index) => (
                       <div key={item.stage} className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -326,51 +384,6 @@ export default function ApplicationDetails({ application, onBack, onEdit }) {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="premium-card border-0">
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-blue-50"
-                    onClick={() => onEdit(application)}
-                  >
-                    <Edit className="w-4 h-4 mr-3" />
-                    Edit Application
-                  </Button>
-                  
-                  {application.cv_version_used && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start hover:bg-green-50"
-                      asChild
-                    >
-                      <a href="#" onClick={(e) => e.preventDefault()}>
-                        <FileText className="w-4 h-4 mr-3" />
-                        View CV Used
-                      </a>
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-purple-50"
-                    onClick={onBack}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-3" />
-                    Back to Applications
-                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
