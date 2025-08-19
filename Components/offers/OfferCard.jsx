@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,18 +23,24 @@ const currencySymbols = {
 };
 
 export default function OfferCard({ offer, index, onEdit, onDelete, isComparing, isSelected, onToggleCompare }) {
-  const formatCurrency = (amount, currency) => {
-    const symbol = currencySymbols[currency] || currency;
-    if (currency === 'NIS') {
+  const formatSalary = () => {
+    if (offer.salary_type === 'hourly') {
+      const rate = (offer.hourly_rate || 0).toLocaleString('en-US');
+      const symbol = currencySymbols[offer.currency] || offer.currency;
+      return `${symbol}${rate}/hr`;
+    }
+    const amount = offer.base_salary || 0;
+    const symbol = currencySymbols[offer.currency] || offer.currency;
+    if (offer.currency === 'NIS') {
       return `${amount.toLocaleString('he-IL')}₪`;
     }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD',
+      currency: offer.currency || 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
+  }
 
   return (
     <motion.div
@@ -55,15 +62,15 @@ export default function OfferCard({ offer, index, onEdit, onDelete, isComparing,
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Base Salary</p>
-                  <p className="font-bold text-lg">{formatCurrency(offer.base_salary, offer.currency)}</p>
+                  <p className="text-sm text-gray-500">Salary</p>
+                  <p className="font-bold text-lg">{formatSalary()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500">Vacation</p>
-                  <p className="font-bold text-lg">{offer.vacation_days} days</p>
+                  <p className="font-bold text-lg">{offer.vacation_days || 'N/A'} days</p>
                 </div>
               </div>
             </div>

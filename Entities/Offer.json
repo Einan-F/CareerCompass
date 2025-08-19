@@ -14,13 +14,30 @@
       "type": "string",
       "description": "Position offered"
     },
+    "salary_type": {
+      "type": "string",
+      "enum": [
+        "monthly_global",
+        "hourly"
+      ],
+      "default": "monthly_global",
+      "description": "Type of salary structure"
+    },
     "base_salary": {
       "type": "number",
-      "description": "Base annual salary"
+      "description": "Base monthly salary (for monthly_global type)"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Rate per hour (for hourly type)"
+    },
+    "monthly_hours": {
+      "type": "number",
+      "description": "Estimated hours per month (for hourly type)"
     },
     "currency": {
       "type": "string",
-      "default": "USD",
+      "default": "NIS",
       "description": "Currency of the salary"
     },
     "bonus_structure": {
@@ -98,7 +115,6 @@
   "required": [
     "application_id",
     "company_name",
-    "position_title",
-    "base_salary"
+    "position_title"
   ]
 }
