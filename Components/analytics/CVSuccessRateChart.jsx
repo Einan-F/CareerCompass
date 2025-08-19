@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,9 +9,10 @@ export default function CVSuccessRateChart({ applications, cvs, isLoading }) {
     return cvs.map(cv => {
       const appsWithCV = applications.filter(app => app.cv_version_used === cv.version_name);
       const interviews = appsWithCV.filter(app => app.interview_stages && app.interview_stages.length > 0).length;
+      const rate = appsWithCV.length > 0 ? (interviews / appsWithCV.length * 100) : 0;
       return {
         name: cv.version_name,
-        'Interview Rate': appsWithCV.length > 0 ? (interviews / appsWithCV.length * 100) : 0,
+        'Interview Rate': parseFloat(rate.toFixed(1)),
         'Applications': appsWithCV.length
       };
     });
