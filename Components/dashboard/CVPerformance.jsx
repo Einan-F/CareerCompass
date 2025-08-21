@@ -75,42 +75,39 @@ export default function CVPerformance() {
             </div>
           ) : topCVs.length > 0 ? (
             <div className="space-y-4">
-              {topCVs.map((cv, index) => {
-                const stats = getCVStats(cv);
-                return (
-                  <motion.div
-                    key={cv.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{cv.version_name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {cv.stats.applications} applications • {cv.stats.interviews} interviews
-                        </p>
-                      </div>
+              {topCVs.map((cv, index) => (
+                <motion.div
+                  key={cv.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-white" />
                     </div>
-                    <div className="text-right">
-                      <Badge 
-                        variant="outline" 
-                        className={`font-semibold ${
-                          cv.stats.rate >= 20 ? 'border-green-500 text-green-700 bg-green-50' :
-                          cv.stats.rate >= 10 ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
-                          'border-gray-300 text-gray-600'
-                        }`}
-                      >
-                        {cv.stats.rate}% rate
-                      </Badge>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{cv.version_name}</h4>
+                      <p className="text-sm text-gray-600">
+                        {cv.stats.applications} applications • {cv.stats.interviews} interviews
+                      </p>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                  <div className="text-right">
+                    <Badge 
+                      variant="outline" 
+                      className={`font-semibold ${
+                        cv.stats.rate >= 20 ? 'border-green-500 text-green-700 bg-green-50' :
+                        cv.stats.rate >= 10 ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
+                        'border-gray-300 text-gray-600'
+                      }`}
+                    >
+                      {cv.stats.rate}% rate
+                    </Badge>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-8">
