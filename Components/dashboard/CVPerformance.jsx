@@ -1,26 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, TrendingUp, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { cvService } from '@/lib/services/cvService';
 
-export default function CVPerformance({ cvs, applications, isLoading }) {
-  const getCVStats = (cv) => {
-    const applicationsWithCV = applications.filter(app => app.cv_version_used === cv.version_name);
-    const interviewInvitations = applicationsWithCV.filter(app => 
-      app.interview_stages && app.interview_stages.length > 0
-    ).length;
-    
-    return {
-      applications: applicationsWithCV.length,
-      interviews: interviewInvitations,
-      rate: applicationsWithCV.length > 0 ? ((interviewInvitations / applicationsWithCV.length) * 100).toFixed(1) : 0
+export default function CVPerformance() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [cvs, setCvs] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const metrics = await cvService.getPerformanceMetrics();
+        // Sort by interview rate descending
+        const sortedCVs = metrics.map(cv => ({
+          ...cv,
+          stats: {
+            applications: cv.applications_count,
+            interviews: Math.round(cv.applications_count * (cv.interview_rate / 100)),
+            rate: cv.interview_rate.toFixed(1)
+          }
+        })).sort((a, b) => b.interview_rate - a.interview_rate);
+        setCvs(sortedCVs);
+      } catch (error) {
+        console.error('Failed to load CV metrics:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  };
+
+    loadData();
+  }, []);
 
   const topCVs = cvs.slice(0, 4);
 
@@ -77,7 +92,7 @@ export default function CVPerformance({ cvs, applications, isLoading }) {
                       <div>
                         <h4 className="font-semibold text-gray-900">{cv.version_name}</h4>
                         <p className="text-sm text-gray-600">
-                          {stats.applications} applications • {stats.interviews} interviews
+                          {cv.stats.applications} applications • {cv.stats.interviews} interviews
                         </p>
                       </div>
                     </div>
@@ -85,12 +100,12 @@ export default function CVPerformance({ cvs, applications, isLoading }) {
                       <Badge 
                         variant="outline" 
                         className={`font-semibold ${
-                          stats.rate >= 20 ? 'border-green-500 text-green-700 bg-green-50' :
-                          stats.rate >= 10 ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
+                          cv.stats.rate >= 20 ? 'border-green-500 text-green-700 bg-green-50' :
+                          cv.stats.rate >= 10 ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
                           'border-gray-300 text-gray-600'
                         }`}
                       >
-                        {stats.rate}% rate
+                        {cv.stats.rate}% rate
                       </Badge>
                     </div>
                   </motion.div>
