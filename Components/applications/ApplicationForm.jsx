@@ -22,6 +22,7 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
     job_source: "",
     status: "applied",
     cv_version_used: "",
+    cv_version_id: null,
     cover_letter_file_url: "",
     cover_letter: "",
     salary_range: "",
@@ -191,8 +192,15 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
               <div className="space-y-2">
                 <Label htmlFor="cv_version_used">CV Version Used</Label>
                 <Select
-                  value={formData.cv_version_used}
-                  onValueChange={(value) => handleChange('cv_version_used', value || null)}
+                  value={formData.cv_version_id || ""}
+                  onValueChange={(value) => {
+                    if (!value) {
+                      setFormData(prev => ({ ...prev, cv_version_id: null, cv_version_used: null }));
+                      return;
+                    }
+                    const selected = cvs.find(cv => cv.id === value);
+                    setFormData(prev => ({ ...prev, cv_version_id: value, cv_version_used: selected?.version_name || null }));
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select CV version" />
