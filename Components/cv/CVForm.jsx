@@ -189,7 +189,7 @@ export default function CVForm({ cv, onSave, onCancel }) {
               <Button 
                 type="submit"
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                disabled={!formData.file_url}
+                disabled={!formData.file_url && !selectedFile}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {cv ? 'Update CV' : 'Save CV'}

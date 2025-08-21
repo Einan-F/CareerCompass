@@ -192,14 +192,15 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
                 <Label htmlFor="cv_version_used">CV Version Used</Label>
                 <Select
                   value={formData.cv_version_used}
-                  onValueChange={(value) => handleChange('cv_version_used', value)}
+                  onValueChange={(value) => handleChange('cv_version_used', value || null)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select CV version" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">No CV</SelectItem>
                     {cvs.map(cv => (
-                      <SelectItem key={cv.id} value={cv.version_name}>
+                      <SelectItem key={cv.id} value={cv.id}>
                         {cv.version_name}
                       </SelectItem>
                     ))}
