@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   LayoutDashboard, 
@@ -154,7 +154,7 @@ export default function Layout({ children, currentPageName }) {
           </header>
 
           <div className="flex-1 overflow-auto">
-            {children}
+            <Outlet />
           </div>
         </main>
       </div>

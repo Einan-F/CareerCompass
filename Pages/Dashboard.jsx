@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Application, CV, Offer } from "@/entities/all";
+import { applicationService } from "@/lib/services/applicationService";
+import { cvService } from "@/lib/services/cvService";
+import { offerService } from "@/lib/services/offerService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -35,14 +37,14 @@ export default function Dashboard() {
     setIsLoading(true);
     try {
       const [applicationsData, cvsData, offersData] = await Promise.all([
-        Application.list('-application_date', 20),
-        CV.list('-created_date', 10),
-        Offer.list('-created_date', 10)
+        applicationService.getAll(),
+        cvService.getAll(),
+        offerService.getAll()
       ]);
       
-      setApplications(applicationsData);
-      setCvs(cvsData);
-      setOffers(offersData);
+      setApplications(applicationsData || []);
+      setCvs(cvsData || []);
+      setOffers(offersData || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }

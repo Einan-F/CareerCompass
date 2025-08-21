@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Layout from './Layout'
 import { useAuth } from './lib/context/AuthContext'
 
@@ -30,19 +30,17 @@ function App() {
         path="/"
         element={
           <PrivateRoute>
-            <Layout>
-              <Routes>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="applications" element={<Applications />} />
-                <Route path="cv-library" element={<CVLibrary />} />
-                <Route path="offers" element={<Offers />} />
-                <Route path="analytics" element={<Analytics />} />
-              </Routes>
-            </Layout>
+            <Layout />
           </PrivateRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="applications" element={<Applications />} />
+        <Route path="cv-library" element={<CVLibrary />} />
+        <Route path="offers" element={<Offers />} />
+        <Route path="analytics" element={<Analytics />} />
+      </Route>
     </Routes>
   )
 }
@@ -113,6 +111,13 @@ function Login() {
             >
               Sign in
             </button>
+          </div>
+          <div className="text-sm text-center mt-4">
+            <p>Don't have an account?{' '}
+              <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+                Sign up here
+              </a>
+            </p>
           </div>
         </form>
       </div>
