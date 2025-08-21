@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { Application, CV, Offer } from "@/entities/all";
+import { applicationService } from "@/lib/services/applicationService";
+import { cvService } from "@/lib/services/cvService";
+import { offerService } from "@/lib/services/offerService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,12 +46,20 @@ export default function Analytics() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const [applications, cvs, offers] = await Promise.all([
-      Application.list(),
-      CV.list(),
-      Offer.list()
-    ]);
-    setData({ applications, cvs, offers });
+    try {
+      const [applications, cvs, offers] = await Promise.all([
+        applicationService.getAll(),
+        cvService.getAll(),
+        offerService.getAll()
+      ]);
+      setData({ 
+        applications: applications || [], 
+        cvs: cvs || [], 
+        offers: offers || [] 
+      });
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    }
     setIsLoading(false);
   };
   
