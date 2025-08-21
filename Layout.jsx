@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   LayoutDashboard, 
@@ -25,6 +25,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useAuth } from "./lib/context/AuthContext";
 
 const navigationItems = [
   {
@@ -56,6 +57,16 @@ const navigationItems = [
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } finally {
+      navigate("/login");
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -141,6 +152,13 @@ export default function Layout({ children, currentPageName }) {
                 <p className="font-semibold text-gray-900 text-sm truncate">Job Seeker</p>
                 <p className="text-xs text-gray-500 truncate">Track your career journey</p>
               </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="ml-auto text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                Log out
+              </button>
             </div>
           </SidebarFooter>
         </Sidebar>

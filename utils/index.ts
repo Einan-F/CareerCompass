@@ -64,12 +64,33 @@ export const INTERVIEW_STAGES = [
   'Offer Stage'
 ];
 
-export function createPageUrl(type: string, id: string): string {
-  const urlMap: Record<string, string> = {
-    application: `/applications/${id}`,
-    cv: `/cv-library/${id}`,
-    offer: `/offers/${id}`
+export function createPageUrl(input: string, id?: string): string {
+  // Detail routes when an id is provided and type-like key is used
+  if (id) {
+    const detailUrlMap: Record<string, string> = {
+      application: `/applications/${id}`,
+      cv: `/cv-library/${id}`,
+      offer: `/offers/${id}`,
+    };
+    return detailUrlMap[input] || "/";
+  }
+
+  // If already looks like a path, return as-is
+  if (input.startsWith("/")) return input;
+
+  // Preserve query string if provided in the input, like "Applications?action=new"
+  const [rawPage, query = ""] = input.split("?");
+  const pageKey = rawPage.trim().toLowerCase();
+
+  const pageUrlMap: Record<string, string> = {
+    dashboard: "/dashboard",
+    applications: "/applications",
+    cvlibrary: "/cv-library",
+    cv_library: "/cv-library",
+    offers: "/offers",
+    analytics: "/analytics",
   };
 
-  return urlMap[type] || '/';
+  const base = pageUrlMap[pageKey] || "/";
+  return query ? `${base}?${query}` : base;
 }
