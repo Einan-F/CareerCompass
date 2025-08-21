@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from "react";
-import { Application, CV } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { applicationService } from "../lib/services/applicationService";
+import { cvService } from "../lib/services/cvService";
+import { useAuth } from "../lib/context/AuthContext";
 import {
   Plus,
   Search,
@@ -26,6 +28,7 @@ import ApplicationDetails from "../components/applications/ApplicationDetails";
 import ApplicationsTable from "../components/applications/ApplicationsTable"; // New component import
 
 export default function Applications() {
+  const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [cvs, setCvs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +36,7 @@ export default function Applications() {
   const [editingApplication, setEditingApplication] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState('card'); // New state for view mode
+  const [viewMode, setViewMode] = useState('card');
   const [filters, setFilters] = useState({
     status: "all",
     method: "all",
@@ -41,38 +44,53 @@ export default function Applications() {
   });
 
   useEffect(() => {
-    loadApplications();
-    loadCVs();
+    if (user) {
+      loadApplications();
+      loadCVs();
+    }
 
     // Check URL parameters for new application
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('action') === 'new') {
       setShowForm(true);
     }
-  }, []);
+  }, [user]);
 
   const loadApplications = async () => {
     setIsLoading(true);
-    const data = await Application.list('-application_date');
-    setApplications(data);
-    setIsLoading(false);
+    try {
+      const data = await applicationService.getAll();
+      setApplications(data);
+    } catch (error) {
+      console.error('Error loading applications:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loadCVs = async () => {
-    const data = await CV.list('-created_date');
-    setCvs(data);
+    try {
+      const data = await cvService.getAll();
+      setCvs(data);
+    } catch (error) {
+      console.error('Error loading CVs:', error);
+    }
   };
 
   const handleSaveApplication = async (applicationData) => {
-    if (editingApplication) {
-      await Application.update(editingApplication.id, applicationData);
-    } else {
-      await Application.create(applicationData);
+    try {
+      if (editingApplication) {
+        await applicationService.update(editingApplication.id, applicationData);
+      } else {
+        await applicationService.create({ ...applicationData, user_id: user.id });
+      }
+      setShowForm(false);
+      setEditingApplication(null);
+      await loadApplications();
+    } catch (error) {
+      console.error('Error saving application:', error);
+      // You might want to add error handling UI here
     }
-
-    setShowForm(false);
-    setEditingApplication(null);
-    loadApplications();
   };
 
   const handleEditApplication = (application) => {
@@ -81,10 +99,14 @@ export default function Applications() {
     setSelectedApplication(null);
   };
 
-  // New function to handle application deletion
   const handleDeleteApplication = async (appId) => {
-    await Application.delete(appId);
-    loadApplications();
+    try {
+      await applicationService.delete(appId);
+      await loadApplications();
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      // You might want to add error handling UI here
+    }
   };
 
   const filteredApplications = applications.filter(app => {

@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { X, Save, Upload, Loader2, Check } from "lucide-react";
-import { UploadFile } from "@/integrations/Core"; // Assuming this path is correct
+import { uploadFile } from '../../lib/storageService';
+import { useAuth } from '../../lib/context/AuthContext';
 
 export default function ApplicationForm({ application, cvs, onSave, onCancel }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState(application || {
     company_name: "",
     position_title: "",
@@ -20,12 +22,13 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
     job_source: "",
     status: "applied",
     cv_version_used: "",
-    cover_letter_file_url: "", // New field for uploaded cover letter URL
-    cover_letter: "", // Now for notes
+    cover_letter_file_url: "",
+    cover_letter: "",
     salary_range: "",
     location: "",
     work_type: "",
-    notes: ""
+    notes: "",
+    user_id: user?.id
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -72,14 +75,14 @@ export default function ApplicationForm({ application, cvs, onSave, onCancel }) 
     setUploadSuccess(false);
 
     try {
-      const { file_url } = await UploadFile({ file });
-      handleChange('cover_letter_file_url', file_url);
+      const filePath = await uploadFile('cover-letters', file);
+      handleChange('cover_letter_file_url', filePath);
       setUploadSuccess(true);
-      // Optionally clear the file input value to allow re-uploading the same file
-      e.target.value = ''; 
+      e.target.value = '';
     } catch (error) {
       console.error("Cover letter upload failed:", error);
-      setUploadSuccess(false); // Ensure success is false on error
+      setErrors(prev => ({ ...prev, upload: 'Failed to upload cover letter. Please try again.' }));
+      setUploadSuccess(false);
     } finally {
       setIsUploading(false);
     }

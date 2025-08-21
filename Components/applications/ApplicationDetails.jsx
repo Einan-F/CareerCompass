@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getFileUrl } from "../../lib/storageService";
 import { ArrowLeft, Edit, Calendar, MapPin, FileText, Building2, DollarSign, Clock, Users, ExternalLink, Target } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -27,7 +28,8 @@ const workTypeIcons = {
 };
 
 export default function ApplicationDetails({ application, cvs, onBack, onEdit }) {
-  const cvFileUrl = cvs.find(cv => cv.version_name === application.cv_version_used)?.file_url;
+  const cv = cvs.find(cv => cv.id === application.cv_version_used);
+  const cvFileUrl = cv?.file_url;
   
   const canManageOffer = ['offer_received', 'offer_accepted', 'offer_declined'].includes(application.status);
 
