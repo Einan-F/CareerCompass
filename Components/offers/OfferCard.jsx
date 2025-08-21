@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SalaryType, formatSalary } from "../../lib/types/offer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
 import { Edit, Trash2, Calendar, DollarSign, Briefcase } from "lucide-react";
@@ -15,32 +16,7 @@ const statusColors = {
   negotiating: "bg-blue-100 text-blue-800 border-blue-200",
 };
 
-const currencySymbols = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  NIS: '₪'
-};
-
 export default function OfferCard({ offer, index, onEdit, onDelete, isComparing, isSelected, onToggleCompare }) {
-  const formatSalary = () => {
-    if (offer.salary_type === 'hourly') {
-      const rate = (offer.hourly_rate || 0).toLocaleString('en-US');
-      const symbol = currencySymbols[offer.currency] || offer.currency;
-      return `${symbol}${rate}/hr`;
-    }
-    const amount = offer.base_salary || 0;
-    const symbol = currencySymbols[offer.currency] || offer.currency;
-    if (offer.currency === 'NIS') {
-      return `${amount.toLocaleString('he-IL')}₪`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: offer.currency || 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
 
   return (
     <motion.div
@@ -63,7 +39,7 @@ export default function OfferCard({ offer, index, onEdit, onDelete, isComparing,
                 <DollarSign className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-sm text-gray-500">Salary</p>
-                  <p className="font-bold text-lg">{formatSalary()}</p>
+                  <p className="font-bold text-lg">{formatSalary(offer)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

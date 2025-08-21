@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Offer, Application } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Plus, Target } from "lucide-react";
+import { offerService } from "../lib/services/offerService";
+import { applicationService } from "../lib/services/applicationService";
+import { useAuth } from "../lib/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 import OfferCard from "../components/offers/OfferCard";
@@ -9,6 +11,7 @@ import OfferForm from "../components/offers/OfferForm";
 import OfferComparison from "../components/offers/OfferComparison";
 
 export default function Offers() {
+  const { user } = useAuth();
   const [offers, setOffers] = useState([]);
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,29 +21,41 @@ export default function Offers() {
   const [selectedToCompare, setSelectedToCompare] = useState([]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user) {
+      loadData();
+    }
+  }, [user]);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [offerData, appData] = await Promise.all([
-      Offer.list('-created_date'),
-      Application.list()
-    ]);
-    setOffers(offerData);
-    setApplications(appData);
-    setIsLoading(false);
+    try {
+      const [offerData, appData] = await Promise.all([
+        offerService.getAll(),
+        applicationService.getAll()
+      ]);
+      setOffers(offerData);
+      setApplications(appData.filter(app => app.status === 'offer_received'));
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveOffer = async (offerData) => {
-    if (editingOffer) {
-      await Offer.update(editingOffer.id, offerData);
-    } else {
-      await Offer.create(offerData);
+    try {
+      if (editingOffer) {
+        await offerService.update(editingOffer.id, { ...offerData, user_id: user.id });
+      } else {
+        await offerService.create({ ...offerData, user_id: user.id });
+      }
+      setShowForm(false);
+      setEditingOffer(null);
+      await loadData();
+    } catch (error) {
+      console.error('Error saving offer:', error);
+      // You might want to add error handling UI here
     }
-    setShowForm(false);
-    setEditingOffer(null);
-    loadData();
   };
   
   const handleEditOffer = (offer) => {
@@ -49,8 +64,13 @@ export default function Offers() {
   };
   
   const handleDeleteOffer = async (offerId) => {
-    await Offer.delete(offerId);
-    loadData();
+    try {
+      await offerService.delete(offerId);
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting offer:', error);
+      // You might want to add error handling UI here
+    }
   };
 
   const toggleCompare = (offerId) => {

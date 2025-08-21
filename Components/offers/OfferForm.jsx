@@ -5,26 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SalaryType, Currency, OfferStatus } from "../../lib/types/offer";
+import { useAuth } from "../../lib/context/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { X, Save } from "lucide-react";
 
 export default function OfferForm({ offer, applications, onSave, onCancel }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState(offer || {
     application_id: "",
     company_name: "",
     position_title: "",
-    salary_type: "monthly_global", // New field
+    salary_type: SalaryType.MONTHLY_GLOBAL,
     base_salary: "",
-    hourly_rate: "", // New field
-    monthly_hours: "", // New field
-    currency: "NIS",
+    hourly_rate: "",
+    monthly_hours: "",
+    currency: Currency.NIS,
     bonus_structure: "",
     vacation_days: "",
     start_date: "",
     offer_deadline: "",
-    status: "pending",
-    notes: ""
+    status: OfferStatus.PENDING,
+    notes: "",
+    user_id: user?.id
   });
   const [errors, setErrors] = useState({}); // New state for validation errors
 
