@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { X, Save, Upload, Loader2, Check } from "lucide-react";
-import { UploadFile } from "@/integrations/Core";
+import { X, Save, Upload, Loader2, Check, FileType } from "lucide-react";
+import { uploadFile } from "@/lib/storageService";
+import { isValidDocumentType, formatFileSize, getFileTypeFromName } from "@/lib/utils/fileUtils";
 
 export default function CVForm({ cv, onSave, onCancel }) {
   const [formData, setFormData] = useState(cv || {
@@ -18,12 +19,31 @@ export default function CVForm({ cv, onSave, onCancel }) {
     is_active: true
   });
   
+  const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    
+    try {
+      if (selectedFile) {
+        setIsUploading(true);
+        const filePath = await uploadFile('cv-files', selectedFile);
+        await onSave({ ...formData, file_url: filePath });
+      } else if (formData.file_url) {
+        // If we're editing and no new file was selected
+        await onSave(formData);
+      } else {
+        throw new Error("Please select a CV file");
+      }
+    } catch (error) {
+      setUploadError(error.message);
+      console.error("Form submission failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -35,22 +55,24 @@ export default function CVForm({ cv, onSave, onCancel }) {
     setFormData(prev => ({ ...prev, [field]: tags }));
   };
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    setIsUploading(true);
-    setUploadSuccess(false);
-    
-    try {
-      const { file_url } = await UploadFile({ file });
-      handleChange('file_url', file_url);
-      setUploadSuccess(true);
-    } catch (error) {
-      console.error("File upload failed:", error);
-    } finally {
-      setIsUploading(false);
+    if (!isValidDocumentType(file)) {
+      setUploadError('Please upload a PDF, DOC, or DOCX file');
+      return;
     }
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError(`File size (${formatFileSize(file.size)}) exceeds 10MB limit`);
+      return;
+    }
+    
+    setSelectedFile(file);
+    setUploadSuccess(true);
+    setUploadError(null);
   };
 
   return (
@@ -96,16 +118,33 @@ export default function CVForm({ cv, onSave, onCancel }) {
                   <Input 
                     id="file_upload_input" 
                     type="file" 
-                    accept=".pdf" 
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                     onChange={handleFileUpload} 
                     className="hidden" 
                   />
                   {isUploading && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
-                  {uploadSuccess && <Check className="w-5 h-5 text-green-500" />}
-                  {formData.file_url && !isUploading && (
-                    <a href={formData.file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
-                      {formData.file_url.split('/').pop()}
-                    </a>
+                  {uploadSuccess && !uploadError && <Check className="w-5 h-5 text-green-500" />}
+                  {(formData.file_url || selectedFile) && !isUploading && (
+                    <div className="flex items-center gap-2">
+                      <FileType className="w-4 h-4 text-blue-500" />
+                      {selectedFile ? (
+                        <div className="text-sm">
+                          <span className="font-medium">{selectedFile.name}</span>
+                          <span className="text-gray-500 ml-2">({formatFileSize(selectedFile.size)})</span>
+                        </div>
+                      ) : formData.file_url && (
+                        <a href={formData.file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate flex items-center gap-1">
+                          <span>{formData.file_url.split('/').pop()}</span>
+                          <span className="text-gray-500">({getFileTypeFromName(formData.file_url)})</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {uploadError && (
+                    <span className="text-sm text-red-600 flex items-center gap-1">
+                      <X className="w-4 h-4" />
+                      {uploadError}
+                    </span>
                   )}
                 </div>
               </div>

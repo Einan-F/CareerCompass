@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { CV, Application } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cvService } from "@/lib/services/cvService";
+import { useToast } from "@/components/ui/use-toast";
 
 import CVCard from "../components/cv/CVCard";
 import CVForm from "../components/cv/CVForm";
@@ -14,31 +15,57 @@ export default function CVLibrary() {
   const [showForm, setShowForm] = useState(false);
   const [editingCV, setEditingCV] = useState(null);
 
+  const { toast } = useToast();
+
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [cvData, appData] = await Promise.all([
-      CV.list('-created_date'),
-      Application.list()
-    ]);
-    setCvs(cvData);
-    setApplications(appData);
-    setIsLoading(false);
+    try {
+      const cvData = await cvService.getAll();
+      // For now, we'll skip loading applications since we're focusing on CV management
+      setCvs(cvData);
+    } catch (error) {
+      console.error("Failed to load CVs:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your CVs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveCV = async (cvData) => {
-    if (editingCV) {
-      await CV.update(editingCV.id, cvData);
-    } else {
-      await CV.create(cvData);
+    try {
+      if (editingCV) {
+        await cvService.update(editingCV.id, cvData);
+        toast({
+          title: "Success",
+          description: "CV updated successfully",
+        });
+      } else {
+        await cvService.create(cvData);
+        toast({
+          title: "Success",
+          description: "CV uploaded successfully",
+        });
+      }
+      
+      setShowForm(false);
+      setEditingCV(null);
+      loadData();
+    } catch (error) {
+      console.error("Failed to save CV:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save CV. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    setShowForm(false);
-    setEditingCV(null);
-    loadData();
   };
 
   const handleEditCV = (cv) => {
@@ -47,8 +74,21 @@ export default function CVLibrary() {
   };
   
   const handleDeleteCV = async (cvId) => {
-    await CV.delete(cvId);
-    loadData();
+    try {
+      await cvService.delete(cvId);
+      toast({
+        title: "Success",
+        description: "CV deleted successfully",
+      });
+      loadData();
+    } catch (error) {
+      console.error("Failed to delete CV:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete CV. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
