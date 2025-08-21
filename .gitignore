@@ -13,6 +13,7 @@
 .DS_Store
 Thumbs.db
 /env_vars.ps1
+/vscode_chat1.md
 
 # local env files
 .env
